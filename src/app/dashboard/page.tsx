@@ -2,6 +2,7 @@
 
 import { Suspense, useEffect, useRef, useState } from "react";
 import { useRouter, useSearchParams } from "next/navigation";
+import { motion } from "framer-motion";
 import {
   TabNav,
   type TabId,
@@ -16,6 +17,7 @@ import {
   AimTrainer,
 } from "./components";
 import { getMapImage } from "./components/imageMaps";
+import AskAIChat from "../coach/components/AskAIChat";
 import type {
   ProgressState,
   ScoutReport,
@@ -58,6 +60,7 @@ function DashboardContent() {
   const [warning, setWarning] = useState<string | null>(null);
   const [streamEnabled, setStreamEnabled] = useState(true);
   const [showWarmup, setShowWarmup] = useState(true);
+  const [chatOpen, setChatOpen] = useState(true);
   const hasPayloadRef = useRef(false);
 
   const apiBase = process.env.NEXT_PUBLIC_API_URL ?? "http://localhost:8080";
@@ -327,89 +330,122 @@ function DashboardContent() {
           statusLabel={displayLabel}
         />
         {/* Header */}
-        <nav className="mx-auto flex max-w-7xl items-center justify-between px-6 py-6">
+        <nav className="mx-auto flex max-w-[1600px] items-center justify-between px-6 py-6">
           <div className="flex items-center gap-3 text-xs uppercase tracking-[0.35em] text-muted">
             <span className="h-2 w-2 rounded-full bg-[rgba(6,182,212,0.8)]" />
             Vantage Point Dashboard
           </div>
-          <button
-            type="button"
-            onClick={() => router.push("/")}
-            className="cut-corner border border-ethereal px-4 py-2 text-xs uppercase tracking-[0.3em] text-muted hover:text-white transition-colors"
-          >
-            Back to Landing
-          </button>
+          <div className="flex items-center gap-3">
+            <button
+              type="button"
+              onClick={() => setChatOpen((v) => !v)}
+              className={`cut-corner px-4 py-2 text-xs uppercase tracking-[0.22em] transition-all ${
+                chatOpen
+                  ? "border-2 border-cyan-400 bg-[rgba(6,182,212,0.15)] text-cyan glow-cyan"
+                  : "border border-ethereal text-muted hover:text-white hover:border-white/20"
+              }`}
+            >
+              💬 Ask AI
+            </button>
+            <button
+              type="button"
+              onClick={() => router.push("/")}
+              className="cut-corner border border-ethereal px-4 py-2 text-xs uppercase tracking-[0.3em] text-muted hover:text-white transition-colors"
+            >
+              Back to Landing
+            </button>
+          </div>
         </nav>
 
-        {/* Main Content */}
-        <section className="mx-auto max-w-7xl px-6 pb-12">
-          {/* Team Header Card */}
-          <div className="cut-corner border border-white/10 bg-glass glass-sheen p-6 mb-6 relative overflow-hidden hover:border-cyan-400/50 transition-colors duration-300">
-            <div className="absolute inset-0 bg-gradient-to-r from-cyan/10 via-transparent to-violet/10" />
-            <div className="relative flex flex-wrap items-center justify-between gap-6">
-              <div className="flex items-center gap-5">
-                <div className="h-16 w-24 rounded-xl border border-ethereal/60 bg-[rgba(255,255,255,0.04)] p-1">
-                  <img
-                    src={
-                      mapFilter ? getMapImage(mapFilter) : getMapImage("Ascent")
-                    }
-                    alt={mapFilter ? `${mapFilter} map` : "Map preview"}
-                    className="h-full w-full object-cover rounded-lg"
-                    loading="lazy"
+        {/* Main Content — flex layout with sidebar */}
+        <section className="mx-auto max-w-[1600px] px-6 pb-12">
+          <div className="flex gap-6">
+            {/* Left: Dashboard content */}
+            <div className={`transition-all duration-300 ${chatOpen ? 'flex-1 min-w-0' : 'w-full'}`}>
+              {/* Team Header Card */}
+              <div className="cut-corner border border-white/10 bg-glass glass-sheen p-6 mb-6 relative overflow-hidden hover:border-cyan-400/50 transition-colors duration-300">
+                <div className="absolute inset-0 bg-gradient-to-r from-cyan/10 via-transparent to-violet/10" />
+                <div className="relative flex flex-wrap items-center justify-between gap-6">
+                  <div className="flex items-center gap-5">
+                    <div className="h-16 w-24 rounded-xl border border-ethereal/60 bg-[rgba(255,255,255,0.04)] p-1">
+                      <img
+                        src={
+                          mapFilter ? getMapImage(mapFilter) : getMapImage("Ascent")
+                        }
+                        alt={mapFilter ? `${mapFilter} map` : "Map preview"}
+                        className="h-full w-full object-cover rounded-lg"
+                        loading="lazy"
+                      />
+                    </div>
+                    <div>
+                      <div className="text-xs uppercase tracking-[0.3em] text-muted mb-2">
+                        Scouting Report
+                      </div>
+                      <div className="text-3xl text-white font-light">
+                        {displayTeam}
+                      </div>
+                      <div className="mt-2 text-sm text-muted">
+                        {matchesAnalyzed} matches analyzed • {gameTitle}
+                        {mapFilter && (
+                          <span className="ml-2 text-cyan">• Map: {mapFilter}</span>
+                        )}
+                      </div>
+                    </div>
+                  </div>
+                  <div className="text-right">
+                    <div className="text-xs uppercase tracking-[0.3em] text-muted mb-1">
+                      Progress
+                    </div>
+                    <div className="text-2xl text-cyan font-mono">{percent}%</div>
+                    <div className="text-xs text-muted mt-1">{displayLabel}</div>
+                  </div>
+                </div>
+
+                {/* Progress Bar */}
+                <div className="mt-4 h-2 w-full overflow-hidden rounded-full bg-[rgba(255,255,255,0.08)]">
+                  <div
+                    className="h-full rounded-full bg-gradient-to-r from-cyan to-violet transition-all duration-700"
+                    style={{ width: `${percent}%` }}
                   />
                 </div>
-                <div>
-                  <div className="text-xs uppercase tracking-[0.3em] text-muted mb-2">
-                    Scouting Report
+                {warning && (
+                  <div className="mt-4 rounded-lg border border-[rgba(255,192,0,0.35)] bg-[rgba(255,192,0,0.08)] px-4 py-2 text-xs text-[rgba(255,220,140,0.95)]">
+                    {warning}
                   </div>
-                  <div className="text-3xl text-white font-light">
-                    {displayTeam}
-                  </div>
-                  <div className="mt-2 text-sm text-muted">
-                    {matchesAnalyzed} matches analyzed • {gameTitle}
-                    {mapFilter && (
-                      <span className="ml-2 text-cyan">• Map: {mapFilter}</span>
-                    )}
-                  </div>
-                </div>
+                )}
               </div>
-              <div className="text-right">
-                <div className="text-xs uppercase tracking-[0.3em] text-muted mb-1">
-                  Progress
+
+              {/* Error Display */}
+              {error && (
+                <div className="cut-corner border border-red/30 bg-red/10 p-4 text-sm text-red mb-6">
+                  {error}
                 </div>
-                <div className="text-2xl text-cyan font-mono">{percent}%</div>
-                <div className="text-xs text-muted mt-1">{displayLabel}</div>
+              )}
+
+              {/* Tab Navigation */}
+              <div className="mb-6">
+                <TabNav activeTab={activeTab} onTabChange={setActiveTab} />
               </div>
+
+              {/* Tab Content */}
+              <div className="min-h-[500px]">{renderActiveTab()}</div>
             </div>
 
-            {/* Progress Bar */}
-            <div className="mt-4 h-2 w-full overflow-hidden rounded-full bg-[rgba(255,255,255,0.08)]">
-              <div
-                className="h-full rounded-full bg-gradient-to-r from-cyan to-violet transition-all duration-700"
-                style={{ width: `${percent}%` }}
-              />
-            </div>
-            {warning && (
-              <div className="mt-4 rounded-lg border border-[rgba(255,192,0,0.35)] bg-[rgba(255,192,0,0.08)] px-4 py-2 text-xs text-[rgba(255,220,140,0.95)]">
-                {warning}
-              </div>
+            {/* Right: AI Chat sidebar */}
+            {chatOpen && (
+              <motion.aside
+                initial={{ opacity: 0, x: 20 }}
+                animate={{ opacity: 1, x: 0 }}
+                exit={{ opacity: 0, x: 20 }}
+                transition={{ duration: 0.3 }}
+                className="w-[380px] shrink-0 hidden lg:block"
+              >
+                <div className="sticky top-6 cut-corner border border-ethereal-strong bg-glass h-[calc(100vh-80px)] flex flex-col">
+                  <AskAIChat teamName={displayTeam} />
+                </div>
+              </motion.aside>
             )}
           </div>
-
-          {/* Error Display */}
-          {error && (
-            <div className="cut-corner border border-red/30 bg-red/10 p-4 text-sm text-red mb-6">
-              {error}
-            </div>
-          )}
-
-          {/* Tab Navigation */}
-          <div className="mb-6">
-            <TabNav activeTab={activeTab} onTabChange={setActiveTab} />
-          </div>
-
-          {/* Tab Content */}
-          <div className="min-h-[500px]">{renderActiveTab()}</div>
         </section>
       </div>
     </div>
