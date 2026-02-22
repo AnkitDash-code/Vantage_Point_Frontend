@@ -208,7 +208,7 @@ export default function InsightsTab({
               </div>
               <div className="text-3xl font-bold text-white mt-2">
                 {Object.values(insights.insights).reduce(
-                  (sum, arr) => sum + arr.length,
+                  (sum: number, arr: Insight[]) => sum + arr.length,
                   0
                 )}
               </div>
@@ -219,8 +219,8 @@ export default function InsightsTab({
               </div>
               <div className="text-3xl font-bold text-red-400 mt-2">
                 {Object.values(insights.insights).reduce(
-                  (sum, arr) =>
-                    sum + arr.filter((i) => i.severity === "critical").length,
+                  (sum: number, arr: Insight[]) =>
+                    sum + arr.filter((i: Insight) => i.severity === "critical").length,
                   0
                 )}
               </div>
@@ -303,7 +303,7 @@ export default function InsightsTab({
             )}
 
           {/* No Insights Found */}
-          {Object.values(insights.insights).every((arr) => arr.length === 0) && (
+          {Object.values(insights.insights).every((arr: Insight[]) => arr.length === 0) && (
             <div className="text-center py-12">
               <span className="text-6xl mb-4 block">✅</span>
               <h3 className="text-xl font-bold text-white mb-2">
