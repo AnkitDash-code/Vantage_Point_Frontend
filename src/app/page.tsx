@@ -663,6 +663,7 @@ export default function Home() {
             </p>
             <div className="mt-6 flex flex-wrap justify-center gap-4">
               <TacticalButton label="Launch Scout Mode" href="#" />
+              <TacticalButton label="Assistant Coach" href="/coach" />
               <TacticalButton label="View API Docs" href="#" variant="ghost" />
             </div>
           </div>
